@@ -1,0 +1,4 @@
+npm install passport passport-http --save
+
+var passport = require('passport')
+var BasicStrategy = require('passport-http').BasicStrategy

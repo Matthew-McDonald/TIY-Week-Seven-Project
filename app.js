@@ -1,15 +1,51 @@
 const express = require('express');
+const path = require('path');
 const app = express();
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const mustacheExpress = require('mustache-express');
+const passport = require('passport');
+const BasicStrategy = require('passport-http').BasicStrategy;
+const bcrypt = require('bcryptjs');
+
+
 // const passport = require('passport');
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 mongoose.connect('mongodb://localhost/stattracker');
 
 Activity = require('./models/activities');
+User = require('./models/user')
 
+
+// Authentication Section DONT DELETE
+// example of modifying new password
+// var user = User.findOne({name: "mattmcd"}, function(err, user){
+//   user.password = 'test';
+//   user.save(function(err){
+//     if (err) {return console.log('user not saved')}
+//     console.log('user saved!')
+//   })
+// });
+
+passport.use(new BasicStrategy(
+  function(username, password, done) {
+    User.findOne({ name: username }, function(err, user){
+      console.log("User Check");
+      if (user && bcrypt.compareSync(password, user.password)){
+        return done(null, user);
+      }
+      return done(null, false);
+    });
+  }
+));
+
+//api authentication for passport
+app.get('/api/auth',
+  passport.authenticate('basic', {session: false}), function (req, res) {
+      res.send('You have been authenticated, ' + req.user.name);
+  }
+);
 
 //Tells the client to use the correct home route
 app.get('/', function(req, res){
